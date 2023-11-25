@@ -41,6 +41,18 @@ class EnOceanDongle:
 
     def _send_message_callback(self, packet):
         """Sends a packet through the EnOcean dongle"""
+        
+        now = time.time()
+        LOGGER.debug("VINCENT : delay of %d [ms]" % (self.delay))
+        if self.last_message_time is None or (now - self.last_message_time) > (self.delay/1000.):
+            self.last_message_time = now
+            LOGGER.debug("VINCENT : No delay")
+        else:
+            self.last_message_time = self.last_message_time + (self.delay/1000.)
+            _delay = self.last_message_time - now
+            LOGGER.debug("VINCENT : Delaying for %f [s]" % (_delay))
+            time.sleep(_delay)
+        
         LOGGER.debug(
             "VINCENT : send packet %s, data=%s, optional=%s"
             % (
@@ -49,16 +61,7 @@ class EnOceanDongle:
                 to_hex_string(packet.optional),
             )
         )
-        
-        now = time.time()
-        LOGGER.debug("VINCENT : delay of %d" % (self.delay))
-        if self.last_message_time is None or (now - self.last_message_time) > (self.delay/1000.):
-            self.last_message_time = now
-        else:
-            self.last_message_time = self.last_message_time + (self.delay/1000.)
-            _delay = self.last_message_time - now
-            time.sleep(_delay)
-        
+
         self._communicator.send(packet)
 
 
